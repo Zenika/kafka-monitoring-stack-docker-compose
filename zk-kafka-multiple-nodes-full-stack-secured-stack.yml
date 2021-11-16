@@ -322,7 +322,7 @@ services:
       retries: 10
       start_period: 2s
     environment:
-      - KAFKA_JMX_PORT=9999
+      - CONNECT_JMX_PORT=9999
       - CONNECT_BOOTSTRAP_SERVERS=kafka101:9092,kafka102:9092,kafka103:9092
       - CONNECT_SECURITY_PROTOCOL=SASL_PLAINTEXT
       - CONNECT_SASL_MECHANISM=SCRAM-SHA-512
@@ -345,7 +345,7 @@ services:
       - CONNECT_REST_ADVERTISED_HOST_NAME=kafka-connect-1
       - CONNECT_PLUGIN_PATH=/confluent-${CONFLUENT_VERSION}/share/java
       - CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
-      - KAFKA_HEAP_OPTS="-Xmx512M -Xms512M"
+      - CONNECT_HEAP_OPTS="-Xmx512M -Xms512M"
     container_name: kafka-connect-1
     networks:
       - kafka
