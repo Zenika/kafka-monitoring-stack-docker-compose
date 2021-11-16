@@ -1,0 +1,10 @@
+{
+  "name": "connectorSinkFile",
+  "config": {
+    "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+    "file": "/tmp/out.txt",
+    "topics": "perf",
+    "consumer.override.sasl.jaas.config":"org.apache.kafka.common.security.scram.ScramLoginModule required username=kafka password=kafka;",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter"
+  }
+}

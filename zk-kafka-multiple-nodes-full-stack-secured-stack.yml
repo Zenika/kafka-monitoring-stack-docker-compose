@@ -116,6 +116,23 @@ services:
     networks:
       - kafka
 
+  load-connector:
+    image: "curlimages/curl:7.69.0"
+    hostname: curl
+    entrypoint:
+      - "/deployConnector.sh"
+      - "http://kafka-connect-1:8083"
+      - ""
+      - "body.json"
+    depends_on:
+      - kafka-connect-1
+    networks:
+      - kafka
+    restart: on-failure
+    volumes:
+      - ./bin/connect/deployConnector.sh:/deployConnector.sh:ro
+      - ./data/connectorSinkFile.json:/body.json:ro
+
   zk1:
     image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
     environment:
