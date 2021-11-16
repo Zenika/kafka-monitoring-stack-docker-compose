@@ -322,7 +322,7 @@ services:
       retries: 10
       start_period: 2s
     environment:
-      - CONNECT_JMX_PORT=9999
+      - KAFKA_JMX_PORT=9999
       - CONNECT_BOOTSTRAP_SERVERS=kafka101:9092,kafka102:9092,kafka103:9092
       - CONNECT_SECURITY_PROTOCOL=SASL_PLAINTEXT
       - CONNECT_SASL_MECHANISM=SCRAM-SHA-512

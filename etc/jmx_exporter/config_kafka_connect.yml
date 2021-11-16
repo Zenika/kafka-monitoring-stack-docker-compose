@@ -12,12 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-#---------------------------------------------------------------------------------------------------------
-# Kafka Broker JMX Metrics : 
-# Compatible with version Apache Kafka v2.x.x / Confluent Plateform 5.x.x
-#---------------------------------------------------------------------------------------------------------
-hostPort: kafka-connect-1:9999
+jmxUrl: service:jmx:rmi:///jndi/rmi://kafka-connect-1:9999/jmxrmi
 lowercaseOutputName: true
 lowercaseOutputLabelNames: true
 ssl: false
