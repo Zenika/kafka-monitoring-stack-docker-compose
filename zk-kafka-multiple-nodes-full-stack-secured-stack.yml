@@ -82,7 +82,7 @@ services:
     restart: on-failure
     depends_on:
       - zk1
-    entrypoint: "kafka-configs --zookeeper zookeeper1:2181 --alter --add-config SCRAM-SHA-512='[password=kafka]' --entity-type users --entity-name kafka"
+    entrypoint: "kafka-configs --zookeeper zk1:2181 --alter --add-config SCRAM-SHA-512='[password=kafka]' --entity-type users --entity-name kafka"
     container_name: create-user
     networks:
       - kafka
@@ -95,9 +95,9 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVERS: "zookeeper1:2181,zookeeper2:2181,zookeeper3:2181"
+      ZOOKEEPER_SERVERS: "zk1:2181,zk2:2181,zk3:2181"
       #ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: DEBUG
-    container_name: zookeeper1
+    container_name: zk1
     networks:
     - kafka
 
@@ -109,9 +109,9 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVERS: "zookeeper1:2181,zookeeper2:2181,zookeeper3:2181"
+      ZOOKEEPER_SERVERS: "zk1:2181,zk2:2181,zk3:2181"
       #ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: DEBUG
-    container_name: zookeeper2
+    container_name: zk2
     networks:
     - kafka
 
@@ -123,9 +123,9 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVERS: "zookeeper1:2181,zookeeper2:2181,zookeeper3:2181"
+      ZOOKEEPER_SERVERS: "zk1:2181,zk2:2181,zk3:2181"
       #ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: DEBUG
-    container_name: zookeeper3
+    container_name: zk3
     networks:
     - kafka
 
@@ -137,7 +137,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 101
       KAFKA_JMX_PORT: 9991
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      KAFKA_ZOOKEEPER_CONNECT: zk1:2181,zk2:2181,zk3:2181
       KAFKA_ADVERTISED_LISTENERS: SECURE://kafka101:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SECURE:SASL_PLAINTEXT
       KAFKA_LISTENERS: SECURE://:9092
@@ -174,7 +174,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 102
       KAFKA_JMX_PORT: 9092
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      KAFKA_ZOOKEEPER_CONNECT: zk1:2181,zk2:2181,zk3:2181
       KAFKA_ADVERTISED_LISTENERS: SECURE://kafka101:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SECURE:SASL_PLAINTEXT
       KAFKA_LISTENERS: SECURE://:9092
@@ -211,7 +211,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 103
       KAFKA_JMX_PORT: 9993
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      KAFKA_ZOOKEEPER_CONNECT: zk1:2181,zk2:2181,zk3:2181
       KAFKA_ADVERTISED_LISTENERS: SECURE://kafka101:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SECURE:SASL_PLAINTEXT
       KAFKA_LISTENERS: SECURE://:9092
