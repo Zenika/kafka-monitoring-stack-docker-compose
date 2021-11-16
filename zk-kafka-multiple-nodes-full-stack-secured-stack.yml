@@ -315,6 +315,7 @@ services:
   schema-registry:
     image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
     hostname: schema-registry
+    restart: on-failure
     depends_on:
       - kafka101
       - kafka102
