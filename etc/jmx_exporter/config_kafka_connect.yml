@@ -1,0 +1,235 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements. See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#---------------------------------------------------------------------------------------------------------
+# Kafka Broker JMX Metrics : 
+# Compatible with version Apache Kafka v2.x.x / Confluent Plateform 5.x.x
+#---------------------------------------------------------------------------------------------------------
+hostPort: kafka-connect-1:9999
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+ssl: false
+whitelistObjectNames:
+- "java.lang:*"
+- "kafka.connect:type=app-info,client-id=*"
+# Connector metrics
+- "kafka.connect:type=connector-metrics,connector=*"
+# Common task metrics
+- "kafka.connect:type=connector-task-metrics,connector=*,task=*"
+# Source task metrics
+- "kafka.connect:type=source-task-metrics,connector=*,task=*"
+# Sink task metrics
+- "kafka.connect:type=sink-task-metrics,connector=*,task=*"
+# Client metrics
+- "kafka.connect:type=connect-metrics,client-id=*"
+# Worker rebalance metrics
+- "kafka.connect:type=connect-worker-rebalance-metrics"
+# Worker metrics
+- "kafka.connect:type=connect-worker-metrics"
+# Client producer/consumer metrics
+# - "kafka.consumer:*"
+# - "kafka.producer:*"
+blacklistObjectNames:
+- "kafka.admin.client:*"
+- "kafka.consumer:type=*,id=*"
+- "kafka.producer:type=*,id=*"
+- "kafka.producer:client-id=confluent.monitoring*,*"
+- "kafka.*:type=kafka-metrics-count,*"
+rules:
+# MBeans (Connector Metrics): kafka.connect:type=connector-metrics,connector=*
+#   - connector-type                      Connector type: source or sink
+#   - connector-class                     Connector class name
+#   - connector-version                   Connector class version (as reported by the connector)
+#   - status                              Connector status: running, paused, or stopped
+- pattern: "kafka.connect<type=connector-metrics, connector=(.+)><>(.+): (.+)"
+  value: 1
+  name: kafka_connect_connector_metrics
+  labels:
+    connector: $1
+    $2: $3
+
+# MBeans (Connector Tasks Metrics)
+# kafka.connect:type=connector-task-metrics,connector=*,task=*
+#   - status  Current task status: unassigned, running, paused, failed, or destroyed
+- pattern: "kafka.connect<type=connector-task-metrics, connector=(.+), task=(\\d+)><>status: (.+)"
+  name: kafka_connect_connector_task_metrics
+  value: 1
+  labels:
+    connector: "$1"
+    task: "$2"
+    status: "$3"
+
+# MBeans (Connector Tasks Metrics)
+# kafka.connect:type=*-task-metrics,*
+# kafka.connect:type=source-task-metrics,connector=*,task=*
+# kafka.connect:type=sink-task-metrics,connector=*,task=*
+# kafka.connect:type=connector-task-metrics,connector=*,task=*
+# Common task metrics :
+#   - pause-ratio Fraction of time the task has spent in a paused state
+#   - running-ratio Fraction of time the task has spent in the running state
+#   - offset-commit-success-percentage  Average percentage of the task’s offset commit attempts that succeeded
+#   - offset-commit-failure-percentage  Average percentage of the task’s offset commit attempts that failed or had an error
+#   - offset-commit-max-time-ms Maximum time in milliseconds taken by the task to commit offsets
+#   - offset-commit-avg-time-ms Average time in milliseconds taken by the task to commit offsets
+#   - batch-size-max  Maximum size of the batches processed by the connector
+#   - batch-size-avg  Average size of the batches processed by the connector
+- pattern: "kafka.connect<type=(.+)-task-metrics, connector=(.+), task=(\\d+)><>(.+): (.+)"
+  name: kafka_connect_$1_task_metrics_$4
+  labels:
+    connector: "$2"
+    task: "$3"
+
+# MBeans (Connector Workers Metrics): kafka.connect:type=connect-worker-metrics
+#   - task-count                            Number of tasks that have run in this worker
+#   - connector-count                       The number of connectors that have run in this worker
+#   - connector-startup-attempts-total      Total number of connector startups that this worker has attempted
+#   - connector-startup-success-total       Total number of connector starts that succeeded
+#   - connector-startup-success-percentage  Average percentage of the worker’s connector starts that succeeded
+#   - connector-startup-failure-total       Total number of connector starts that failed
+#   - connector-startup-failure-percentage  Average percentage of the worker’s connectors starts that failed
+#   - task-startup-attempts-total           Total number of task startups that the worker has attempted
+#   - task-startup-success-total            Total number of task starts that succeeded
+#   - task-startup-success-percentage       Average percentage of the worker’s task starts that succeeded
+#   - task-startup-failure-total            Total number of task starts that failed
+#   - task-startup-failure-percentage       Average percentage of the worker’s task starts that failed
+- pattern: "kafka.connect<type=connect-worker-metrics><>([^:]+)"
+  name: kafka_connect_connect_worker_metrics_$1
+  labels:
+    connector: ""
+# kafka.connect:type=connect-worker-metrics,connector=*
+- pattern: "kafka.connect<type=connect-worker-metrics, connector=(.+)><>([^:]+)"
+  name: kafka_connect_connect_worker_metrics_$2
+  labels:
+    connector: $1
+
+# MBeans (Connect Workers Rebalance Metrics): kafka.connect:type=connect-worker-rebalance-metrics
+#   - leader-name                           Name of the group leader
+#   - epoch                                 Epoch or generation number of the worker
+#   - completed-rebalances-total            Total number of rebalances completed by the worker
+#   - rebalancing                           Whether the worker is currently rebalancing
+#   - rebalance-max-time-ms                 Maximum time the worker spent rebalancing (in milliseconds)
+#   - rebalance-avg-time-ms                 Average time the worker spent rebalancing (in milliseconds)
+#   - time-since-last-rebalance-ms          Time since the most recent worker rebalance (in milliseconds)
+- pattern: "kafka.connect<type=connect-worker-rebalance-metrics><>([^:]+)"
+  name: "kafka_connect_connect_worker_rebalance_metrics_$1"
+
+# kafka.connect:type=connect-coordinator-metrics,client-id=*
+# kafka.connect:type=connect-metrics,client-id=*
+- pattern: "kafka.connect<type=(.+), client-id=(.+)><>([^:]+)"
+  name: kafka_connect_$1_$3
+  labels:
+    client_id: $2
+
+# MBeans (Client Producer/Consumer)
+# "kafka.consumer:type=app-info,client-id=*"
+# "kafka.producer:type=app-info,client-id=*"
+- pattern: "kafka.(.+)<type=app-info, client-id=(.+)><>(.+): (.+)"
+  value: 1
+  name: kafka_$1_app_info
+  labels:
+    client_type: $1
+    client_id: $2
+    $3: $4
+  type: UNTYPED
+# "kafka.consumer:type=consumer-metrics,client-id=*, protocol=*, cipher=*"
+# "kafka.consumer:type=type=consumer-fetch-manager-metrics,client-id=*, topic=*, partition=*"
+# "kafka.producer:type=producer-metrics,client-id=*, protocol=*, cipher=*"
+- pattern: "kafka.(.+)<type=(.+), (.+)=(.+), (.+)=(.+), (.+)=(.+)><>(.+):"
+  name: kafka_$1_$2_$9
+  type: GAUGE
+  labels:
+    client_type: $1
+    $3: "$4"
+    $5: "$6"
+    $7: "$8"
+# "kafka.consumer:type=consumer-node-metrics,client-id=*, node-id=*"
+# "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=*, topic=*"
+# "kafka.producer:type=producer-node-metrics,client-id=*, node-id=*"
+# "kafka.producer:type=producer-topic-metrics,client-id=*, topic=*"
+- pattern: "kafka.(.+)<type=(.+), (.+)=(.+), (.+)=(.+)><>(.+):"
+  name: kafka_$1_$2_$7
+  type: GAUGE
+  labels:
+    client_type: $1
+    $3: "$4"
+    $5: "$6"
+# "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=*"
+# "kafka.consumer:type=consumer-metrics,client-id=*"
+# "kafka.producer:type=producer-metrics,client-id=*"
+- pattern: "kafka.(.+)<type=(.+), (.+)=(.+)><>(.+):"
+  name: kafka_$1_$2_$5
+  type: GAUGE
+  labels:
+    client_type: $1
+    $3: "$4"
+- pattern: "kafka.(.+)<type=(.+)><>(.+):"
+  name: kafka_$1_$2_$3
+  labels:
+    client_type: $1
+
+# MBeans GarbageCollector, Memory, MemoryPool, OperatingSystem
+- pattern: 'java.lang<type=GarbageCollector, name=(.*)><>CollectionCount'
+  name: kafka_connect_jvm_gc_collection_count
+  labels:
+    name: $1
+- pattern: 'java.lang<type=GarbageCollector, name=(.*)><>CollectionTime'
+  name: kafka_connect_jvm_gc_collection_time
+  labels:
+    name: $1
+- pattern: 'java.lang<type=GarbageCollector,name=(.*)><LastGcInfo, duration>'
+  name: kafka_connect_jvm_last_gc_duration
+  labels:
+    name: $1
+  attrNameSnakeCase: true
+- pattern: 'java.lang<type=GarbageCollector, name=([^,]+), key=(.*)><LastGcInfo, memoryUsage(\w+)Gc>(\w+)'
+  name: kafka_connect_jvm_last_gc_memory_usage_$4
+  labels:
+    name: $1
+    space: $2
+    type: $4
+  attrNameSnakeCase: true
+# MBeans Memory/Heap
+- pattern: 'java.lang<type=Memory><HeapMemoryUsage>(\w*)'
+  name: kafka_connect_jvm_heap_usage
+  labels:
+    type: $1
+  attrNameSnakeCase: true
+- pattern: 'java.lang<type=Memory><NonHeapMemoryUsage>(\w*)'
+  name: kafka_connect_jvm_non_heap_usage
+  labels:
+    type: $1
+  attrNameSnakeCase: true
+- pattern: 'java.lang<type=MemoryPool, name=(.*)><CollectionUsage>(\w*)'
+  name: kafka_connect_jvm_memory_pool_collection_usage
+  labels:
+    name: $1
+    type: $2
+- pattern: 'java.lang<type=MemoryPool, name=(.*)><Usage>(\w*)'
+  name: kafka_connect_jvm_memory_pool_usage
+  labels:
+    name: $1
+    type: $2
+- pattern: 'java.lang<type=MemoryPool, name=(.*)><PeakUsage>(\w*)'
+  name: kafka_connect_jvm_memory_pool_peak_usage
+  labels:
+    name: $1
+    type: $2
+# MBeans Threading
+- pattern: 'java.lang<type=Threading><>(\w*thread_count)'
+  name: kafka_connect_jvm_$1
+  attrNameSnakeCase: true
+# MBeans OperatingSystem
+- pattern: 'java.lang<type=OperatingSystem><>(\w*)'
+  name: kafka_connect_jvm_os_$1
