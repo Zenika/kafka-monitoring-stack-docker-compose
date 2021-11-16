@@ -351,6 +351,11 @@ services:
                 security.protocol: SASL_PLAINTEXT
                 sasl.mechanism: SCRAM-SHA-512
                 sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="kafka" password="kafka";
+              schema-registry:
+                url: "http://schema-registry:8081"
+              connect:
+                - name: connect
+                  url: "http://kafka-connect-1:8083"
     ports:
     - 8085:8080
     container_name: akhq
