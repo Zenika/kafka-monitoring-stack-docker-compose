@@ -1,0 +1,270 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements. See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+version: '3'
+services:
+  grafana:
+    image: "grafana/grafana:${GRAFANA_VERSION}"
+    ports:
+     - "3000:3000"
+    environment:
+      GF_PATHS_DATA : /var/lib/grafana
+      GF_SECURITY_ADMIN_PASSWORD : kafka
+    volumes:
+     - ./grafana/provisioning:/etc/grafana/provisioning
+     - ./grafana/dashboards:/var/lib/grafana/dashboards
+    container_name: grafana
+    depends_on:
+     - prometheus
+    networks:
+    - kafka
+
+  prometheus:
+    image: "prom/prometheus:${PROMETHEUS_VERSION}"
+    ports:
+     - "9090:9090"
+    volumes:
+     - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml"
+    container_name: prometheus
+    networks:
+    - kafka
+
+  jmx-kafka101:
+    image: "sscaling/jmx-prometheus-exporter:${JMX_EXPORTER_VERSION}"
+    environment:
+     CONFIG_YML : "/etc/jmx_exporter/config.yml"
+    volumes:
+     - ./etc/jmx_exporter/config_kafka101.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka101
+    depends_on:
+     - kafka101
+    networks:
+    - kafka
+
+  jmx-kafka102:
+    image: "sscaling/jmx-prometheus-exporter:${JMX_EXPORTER_VERSION}"
+    environment:
+     CONFIG_YML : "/etc/jmx_exporter/config.yml"
+    volumes:
+     - ./etc/jmx_exporter/config_kafka102.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka102
+    depends_on:
+     - kafka102
+    networks:
+    - kafka
+
+  jmx-kafka103:
+    image: "sscaling/jmx-prometheus-exporter:${JMX_EXPORTER_VERSION}"
+    environment:
+     CONFIG_YML : "/etc/jmx_exporter/config.yml"
+    volumes:
+     - ./etc/jmx_exporter/config_kafka103.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka103
+    depends_on:
+     - kafka103        
+    networks:
+    - kafka
+
+  create-user:
+    image: "confluentinc/cp-kafka:${CONFLUENT_VERSION}"
+    depends_on:
+      - zk1
+    entrypoint: "kafka-configs --zookeeper zookeeper1:2181 --alter --add-config SCRAM-SHA-251='[password=kafka]' --entity-type users --entity-name kafka"
+    restart: on-failure
+    container_name: create-admin-user
+    networks:
+      - kafka
+
+  zk1:
+    image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: "zk1:2888:3888;zk2:2888:3888;zk3:2888:3888"
+      #ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: DEBUG
+      EXTRA_ARGS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_jaas.conf
+    volumes:
+     - ./etc/secrets/zookeeper_jaas.conf:/etc/kafka/zookeeper_jaas.conf
+     - ./etc/zookeeper.properties:/etc/confluent/docker/zookeeper.properties.template
+    container_name: zookeeper1
+    networks:
+    - kafka
+
+  zk2:
+    image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: "zk1:2888:3888;zk2:2888:3888;zk3:2888:3888"
+      #ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: DEBUG
+      EXTRA_ARGS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_jaas.conf
+    volumes:
+     - ./etc/secrets/zookeeper_jaas.conf:/etc/kafka/zookeeper_jaas.conf
+     - ./etc/zookeeper.properties:/etc/confluent/docker/zookeeper.properties.template
+    container_name: zookeeper2
+    networks:
+    - kafka
+
+  zk3:
+    image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: "zk1:2888:3888;zk2:2888:3888;zk3:2888:3888"
+      #ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: DEBUG
+      EXTRA_ARGS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_jaas.conf
+    volumes:
+     - ./etc/secrets/zookeeper_jaas.conf:/etc/kafka/zookeeper_jaas.conf
+     - ./etc/zookeeper.properties:/etc/confluent/docker/zookeeper.properties.template
+    container_name: zookeeper3
+    networks:
+    - kafka
+
+  kafka101:
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
+    depends_on:
+      - zk1
+    ports:
+      - 29091:29091
+    volumes:
+     - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
+    environment:
+      KAFKA_BROKER_ID: 101
+      KAFKA_JMX_PORT: 9991
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka101:29091,PLAINTEXT_HOST://localhost:9091
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT_HOST:SASL_PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_SUPER_USERS: User:kafka
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true" 
+      KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
+      KAFKA_LISTENER_NAME_SECURE_SCRAM___sha___512_sasl_jaas_config: "org.apache.kafka.common.security.scram.ScramLoginModule required username=kafka password=kafka;"
+      KAFKA_OPTS: -Dzookeeper.sasl.clientconfig=ZkClient
+      #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
+      #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      CONFLUENT_METRICS_ENABLE: 'false'
+    container_name: kafka101
+    networks:
+    - kafka
+
+  kafka102:
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
+    depends_on:
+      - zk1
+    ports:
+      - 29092:29092
+    volumes:
+     - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
+    environment:
+      KAFKA_BROKER_ID: 102
+      KAFKA_JMX_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka102:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT_HOST:SASL_PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_SUPER_USERS: User:kafka
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true" 
+      KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
+      KAFKA_LISTENER_NAME_SECURE_SCRAM___sha___512_sasl_jaas_config: "org.apache.kafka.common.security.scram.ScramLoginModule required username=kafka password=kafka;"
+      KAFKA_OPTS: -Dzookeeper.sasl.clientconfig=ZkClient
+      #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
+      #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      CONFLUENT_METRICS_ENABLE: 'false'
+    container_name: kafka102
+    networks:
+    - kafka
+
+  kafka103:
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
+    depends_on:
+      - zk1
+    ports:
+      - 29093:29093
+    volumes:
+     - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
+    environment:
+      KAFKA_BROKER_ID: 103
+      KAFKA_JMX_PORT: 9993
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka103:29093,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT_HOST:SASL_PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_SUPER_USERS: User:kafka
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+      KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
+      KAFKA_LISTENER_NAME_SECURE_SCRAM___sha___512_sasl_jaas_config: "org.apache.kafka.common.security.scram.ScramLoginModule required username=kafka password=kafka;"
+      KAFKA_OPTS: -Dzookeeper.sasl.clientconfig=ZkClient
+      #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
+      #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      CONFLUENT_METRICS_ENABLE: 'false'
+    container_name: kafka103
+    networks:
+    - kafka
+
+  akhq:
+    image: tchiotludo/akhq:${AKHQ_VERSION}
+    environment:
+     AKHQ_CONFIGURATION: |
+        micronaut:
+         server:
+           cors:
+             enabled: true
+        akhq:
+          connections:
+            docker-kafka-server:
+              properties:
+                bootstrap.servers: "kafka101:29091,kafka-2:29092,kafka-3:29093"
+                security.protocol: SASL_PLAINTEXT
+                sasl.mechanism: SCRAM-SHA-512
+                sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="kafka" password="kafka";
+    ports:
+    - 8085:8080
+    container_name: akhq
+    networks:
+    - kafka
+
+networks:
+  kafka:
+    driver: bridge
