@@ -325,7 +325,7 @@ services:
       - SCHEMA_REGISTRY_LISTENERS=http://schema-registry:8081
       - SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL=SASL_PLAINTEXT
       - SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM=SCRAM-SHA-512
-      - "SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG=org.apache.kafka.common.security.scram.ScramLoginModule required username=kakfa password=kafka;"
+      - "SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG=org.apache.kafka.common.security.scram.ScramLoginModule required username=kafka password=kafka;"
     container_name: schema-registry
     networks:
       - kafka
