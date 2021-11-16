@@ -82,8 +82,37 @@ services:
     restart: on-failure
     depends_on:
       - zk1
+      - zk2
+      - zk3
     entrypoint: "kafka-configs --zookeeper zk1:2181 --alter --add-config SCRAM-SHA-512='[password=kafka]' --entity-type users --entity-name kafka"
     container_name: create-user
+    networks:
+      - kafka
+  
+  create-topic:
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
+    restart: on-failure
+    depends_on:
+      - kafka101
+      - kafka102
+      - kafka103
+    volumes:
+      - ./etc/clients/client.properties:/client/client.properties
+    command: kafka-topics --bootstrap-server kafka101:9092,kafka102:9092,kafka103:9092 --command-config /client/client.properties --create --topic perf --replication-factor 3 --partitions 3
+    container_name: create-topic
+    networks:
+      - kafka
+
+  producer-perf-test:
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
+    depends_on:
+      - kafka101
+      - kafka102
+      - kafka103
+    volumes:
+      - ./etc/clients/client.properties:/client/client.properties
+    command: kafka-producer-perf-test --producer-props bootstrap.servers=kafka101:9092,kafka102:9092,kafka103:9092 --producer.config /client/client.properties --topic perf --num-records 2000000 --record-size 1000 --throughput 1000000000
+    container_name: producer-perf-test
     networks:
       - kafka
 
@@ -175,7 +204,7 @@ services:
       - zk3
     environment:
       KAFKA_BROKER_ID: 102
-      KAFKA_JMX_PORT: 9093
+      KAFKA_JMX_PORT: 9992
       KAFKA_ZOOKEEPER_CONNECT: zk1:2181,zk2:2181,zk3:2181
       KAFKA_ADVERTISED_LISTENERS: SECURE://kafka102:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SECURE:SASL_PLAINTEXT
@@ -242,6 +271,10 @@ services:
 
   akhq:
     image: tchiotludo/akhq:${AKHQ_VERSION}
+    depends_on:
+      - kafka101
+      - kafka102
+      - kafka103
     environment:
      AKHQ_CONFIGURATION: |
         micronaut:
