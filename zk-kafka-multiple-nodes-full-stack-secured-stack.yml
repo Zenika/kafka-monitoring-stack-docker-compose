@@ -97,10 +97,6 @@ services:
       ZOOKEEPER_SYNC_LIMIT: 2
       ZOOKEEPER_SERVERS: "zookeeper1:2181,zookeeper2:2181,zookeeper3:2181"
       #ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: DEBUG
-      EXTRA_ARGS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_jaas.conf
-    volumes:
-     - ./etc/secrets/zookeeper_jaas.conf:/etc/kafka/zookeeper_jaas.conf
-     - ./etc/zookeeper.properties:/etc/confluent/docker/zookeeper.properties.template
     container_name: zookeeper1
     networks:
     - kafka
@@ -115,10 +111,6 @@ services:
       ZOOKEEPER_SYNC_LIMIT: 2
       ZOOKEEPER_SERVERS: "zookeeper1:2181,zookeeper2:2181,zookeeper3:2181"
       #ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: DEBUG
-      EXTRA_ARGS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_jaas.conf
-    volumes:
-     - ./etc/secrets/zookeeper_jaas.conf:/etc/kafka/zookeeper_jaas.conf
-     - ./etc/zookeeper.properties:/etc/confluent/docker/zookeeper.properties.template
     container_name: zookeeper2
     networks:
     - kafka
@@ -133,10 +125,6 @@ services:
       ZOOKEEPER_SYNC_LIMIT: 2
       ZOOKEEPER_SERVERS: "zookeeper1:2181,zookeeper2:2181,zookeeper3:2181"
       #ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: DEBUG
-      EXTRA_ARGS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_jaas.conf
-    volumes:
-     - ./etc/secrets/zookeeper_jaas.conf:/etc/kafka/zookeeper_jaas.conf
-     - ./etc/zookeeper.properties:/etc/confluent/docker/zookeeper.properties.template
     container_name: zookeeper3
     networks:
     - kafka
@@ -146,8 +134,6 @@ services:
     restart: on-failure
     depends_on:
       - zk1
-    volumes:
-     - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
     environment:
       KAFKA_BROKER_ID: 101
       KAFKA_JMX_PORT: 9991
@@ -158,14 +144,11 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: SECURE
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_SUPER_USERS: User:kafka
-      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true" 
       KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-512
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-512
       KAFKA_LISTENER_NAME_SECURE_SCRAM___sha___512_sasl_jaas_config: "org.apache.kafka.common.security.scram.ScramLoginModule required username=kafka password=kafka;"
-      KAFKA_OPTS: -Dzookeeper.sasl.clientconfig=ZkClient
       #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
-      KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
@@ -188,8 +171,6 @@ services:
       - zk1
     ports:
       - 29092:29092
-    volumes:
-     - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
     environment:
       KAFKA_BROKER_ID: 102
       KAFKA_JMX_PORT: 9092
@@ -200,14 +181,11 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: SECURE
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_SUPER_USERS: User:kafka
-      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true" 
       KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-512
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-512
       KAFKA_LISTENER_NAME_SECURE_SCRAM___sha___512_sasl_jaas_config: "org.apache.kafka.common.security.scram.ScramLoginModule required username=kafka password=kafka;"
-      KAFKA_OPTS: -Dzookeeper.sasl.clientconfig=ZkClient
       #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
-      KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
@@ -230,8 +208,6 @@ services:
       - zk1
     ports:
       - 29093:29093
-    volumes:
-     - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
     environment:
       KAFKA_BROKER_ID: 103
       KAFKA_JMX_PORT: 9993
@@ -242,14 +218,11 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: SECURE
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_SUPER_USERS: User:kafka
-      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true" 
       KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-512
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-512
       KAFKA_LISTENER_NAME_SECURE_SCRAM___sha___512_sasl_jaas_config: "org.apache.kafka.common.security.scram.ScramLoginModule required username=kafka password=kafka;"
-      KAFKA_OPTS: -Dzookeeper.sasl.clientconfig=ZkClient
       #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
-      KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
