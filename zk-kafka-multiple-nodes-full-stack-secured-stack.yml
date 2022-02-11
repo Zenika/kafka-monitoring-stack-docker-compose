@@ -365,7 +365,7 @@ services:
       - SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL=SASL_PLAINTEXT
       - SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM=SCRAM-SHA-512
       - "SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG=org.apache.kafka.common.security.scram.ScramLoginModule required username=kafka password=kafka;"
-      - SCHEMA_REGISTRY_OPTS="-Xmx512M -Xms512M"
+      - SCHEMA_REGISTRY_HEAP_OPTS="-Xmx512M -Xms512M"
     container_name: schema-registry
     networks:
       - kafka
