@@ -401,6 +401,21 @@ services:
     networks:
     - kafka
 
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.6.8
+    container_name: kafka-lag-exporter
+    depends_on:
+      - kafka101
+      - kafka102
+      - kafka103
+    command:
+      - /opt/docker/bin/kafka-lag-exporter
+      - -Dconfig.file=/opt/docker/conf/application.conf
+    volumes:
+     - ./etc/lag_exporter/application.conf:/opt/docker/conf/application.conf
+    networks:
+    - kafka
+
 networks:
   kafka:
     driver: bridge
